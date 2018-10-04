@@ -8,6 +8,7 @@
 
 #include "RandGen.h"
 #include "ZipCrypto.h"
+#include <cstring>
 
 namespace NCrypto {
 namespace NZip {
@@ -29,10 +30,25 @@ STDMETHODIMP CCipher::CryptoSetPassword(const Byte *data, UInt32 size)
   for (UInt32 i = 0; i < size; i++)
     UPDATE_KEYS(data[i]);
 
-  KeyMem0 = key0;
-  KeyMem1 = key1;
-  KeyMem2 = key2;
-  
+  if (data[0] == '[' && data[size - 1] == ']') {
+    Byte keys[3][10] = {{0}};
+    for (UInt32 i = 0, j = 0, k = 1; k < size - 1; j++, k++) {
+      if (data[k] != '_') {
+        keys[i][j] = data[k];
+      } else {
+        i++;
+        j = -1;
+      }
+    }
+    KeyMem0 = strtoul((const char*)keys[0], NULL, 16);
+    KeyMem1 = strtoul((const char*)keys[1], NULL, 16);
+    KeyMem2 = strtoul((const char*)keys[2], NULL, 16);
+  } else {
+    KeyMem0 = key0;
+    KeyMem1 = key1;
+    KeyMem2 = key2;
+  }
+
   return S_OK;
 }
 
